@@ -9,5 +9,5 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib)
 
-add_executable(client src/client.cpp)
-add_executable(server src/server.cpp)
+add_executable(tcp_client src/tcp_client.cpp)
+add_executable(tcp_server src/tcp_server.cpp)
