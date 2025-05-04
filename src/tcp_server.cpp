@@ -52,6 +52,7 @@ int main(void){
   int connect_fd = -1;
   char sendbuf[MAXLINE];
   char recbuf[MAXLINE];
+  const char* ip_addr_ctr = "10.236.130.22";
 
   /**
    * struct sockaddr_in{
@@ -146,7 +147,7 @@ int main(void){
 	memset(&servaddr, 0, sizeof(servaddr));
 	servaddr.sin_family = AF_INET;
 	servaddr.sin_port = htons(PORT);
-	servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
+	servaddr.sin_addr.s_addr = inet_addr(ip_addr_ctr);
  
   /**
    * int bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
@@ -297,8 +298,13 @@ int main(void){
 				if(errno == EINTR){
 					continue;
 				}
-				exit(0);
+        printf("recv error: %s(error: %d)\n", strerror(errno), errno);
+				break;
 			}
+      if(len == 0){
+        printf("client close connect\n");
+        break;
+      }
  
 			printf("receive: %s\n", recbuf);
 
@@ -313,9 +319,10 @@ int main(void){
         if(errno == EINTR){
           continue;
         }
-        exit(0);
+        printf("send error: %s(error: %d)\n", strerror(errno), errno);
+        break;
       }
-      printf("sned back: %s\n", sendbuf);
+      printf("send back: %s\n", sendbuf);
 		}
 
     printf("close connect_fd\n");
