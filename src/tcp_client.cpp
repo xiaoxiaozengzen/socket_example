@@ -1,11 +1,11 @@
-#include<stdio.h>
-#include<stdlib.h>
-#include<string.h>
-#include<errno.h>
-#include<unistd.h>
-#include<sys/types.h>
-#include<sys/socket.h>
-#include<arpa/inet.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <errno.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
  
 #define MAXLINE 4096
 #define PORT 8000
@@ -26,7 +26,7 @@ int main(void){
 		printf("create socket error: %s(error: %d)\n", strerror(errno), errno);
 		exit(0);
 	}
- 
+
   /**
    * int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
    * @brief 连接服务器
@@ -34,10 +34,17 @@ int main(void){
    * @param addr: 服务器地址
    * @param addrlen: 地址长度
    * @return: 成功返回0，失败返回-1
+   * 
+   * @note 当服务端关闭时，connect会返回-1，并且errno为ECONNREFUSED
+   * @note 当服务端bind并listen时，connect会成功
+   *       客户端会向服务端发送syn包，服务端会返回syn+ack包，客户端收到syn+ack包并发送ack，可以认为connect成功
+   *       此时服务端并没有accept，这条连接是处于半连接状态  
+   * @note 当服务端accept时，connect会成功。可以进行数据传输
    */
 	int ret = connect(sockfd, (struct sockaddr*)&servaddr, sizeof(servaddr));
   if(ret == -1){
 		printf("connect socket error: %s(error: %d)\n", strerror(errno), errno);
+    close(sockfd);
 		exit(0);
 	}
  

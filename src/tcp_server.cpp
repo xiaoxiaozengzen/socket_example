@@ -160,6 +160,7 @@ int main(void){
 	int ret = bind(listen_fd, (struct sockaddr*)&servaddr, sizeof(servaddr));
   if(ret == -1){
 		printf("bind socket error: %s(error: %d)\n", strerror(errno), errno);
+    close(listen_fd);
 		exit(0);
 	}
  
@@ -178,11 +179,12 @@ int main(void){
 	ret = listen(listen_fd, 10);
   if(ret == -1){
 		printf("listen socket error: %s(error: %d)\n", strerror(errno), errno);
+    close(listen_fd);
 		exit(0);
 	}
-  printf("waiting for client connect...\n");
  
 	while(1){
+    printf("waiting for client connect...\n");
     struct sockaddr_in clientaddr;
     socklen_t addrlen = sizeof(clientaddr);
 

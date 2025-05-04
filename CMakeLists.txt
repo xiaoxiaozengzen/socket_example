@@ -11,3 +11,4 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib)
 
 add_executable(tcp_client src/tcp_client.cpp)
 add_executable(tcp_server src/tcp_server.cpp)
+add_executable(second_tcp_client src/second_tcp_client.cpp)
