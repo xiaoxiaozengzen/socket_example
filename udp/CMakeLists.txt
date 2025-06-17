@@ -6,3 +6,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_executable(udp_server udp_server.cpp)
 add_executable(udp_client udp_client.cpp)
+
+add_executable(multicast_server multicast_server.cpp)
+add_executable(multicast_client multicast_client.cpp)
