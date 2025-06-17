@@ -8,59 +8,63 @@
 #include <arpa/inet.h>
  
 #define MAXLINE 4096
-#define PORT 8000
+#define PORT 9000
  
 int main(void){
-	int sockfd = -1;
+	int client_fd = -1;
 	struct sockaddr_in servaddr; 
 	char sendbuf[MAXLINE];
-  char recbuf[MAXLINE];
-  const char* ip_addr_ctr = "10.236.130.22";
+	char recbuf[MAXLINE];
+	const char* ip_addr_ctr = "10.236.130.22";
  
 	memset(&servaddr, 0, sizeof(servaddr));
 	servaddr.sin_family = AF_INET;
 	servaddr.sin_port = htons(PORT);
 	servaddr.sin_addr.s_addr = inet_addr(ip_addr_ctr);
  
-	if((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1){
+	if((client_fd = socket(AF_INET, SOCK_DGRAM, 0)) == -1){
 		printf("create socket error: %s(error: %d)\n", strerror(errno), errno);
-		exit(0);
-	}
-
-	int ret = connect(sockfd, (struct sockaddr*)&servaddr, sizeof(servaddr));
-  if(ret == -1){
-		printf("connect socket error: %s(error: %d)\n", strerror(errno), errno);
-    close(sockfd);
 		exit(0);
 	}
  
 	while(1){
+		sleep(1); // Sleep for 1 second before sending the next message
 		sendbuf[0] = 'h';
-    sendbuf[1] = 'e';
-    sendbuf[2] = 'l';
-    sendbuf[3] = 'l';
-    sendbuf[4] = 'o';
-    sendbuf[7] = '\0';
-		write(sockfd, sendbuf, sizeof(sendbuf));
-    printf("sending: %s\n", sendbuf);
- 
-		ssize_t len = read(sockfd, recbuf, sizeof(recbuf));
-		if(len < 0){
+		sendbuf[1] = 'e';
+		sendbuf[2] = 'l';
+		sendbuf[3] = 'l';
+		sendbuf[4] = 'o';
+		sendbuf[7] = '\0';
+		int send_size = sendto(client_fd, sendbuf, strlen(sendbuf), 0, (struct sockaddr*)&servaddr, sizeof(servaddr));
+		if(send_size < 0){
 			if(errno == EINTR){
+				printf("send interrupted, retrying...\n");
 				continue;
 			}
-      printf("recv error: %s(error: %d)\n", strerror(errno), errno);
+			printf("send error: %s(error: %d)\n", strerror(errno), errno);
 			break;
 		}
-    if(len == 0){
-      printf("server close connect\n");
-      break;
-    }
+    	printf("client sending: %s\n", sendbuf);
  
-		printf("receive: %s\n", recbuf);
-    sleep(1);
+		struct sockaddr_in server_addr;
+		socklen_t addr_len = sizeof(server_addr);
+		int rec_size = recvfrom(client_fd, recbuf, sizeof(recbuf), 0, (struct sockaddr*)&server_addr, &addr_len);
+		if(rec_size < 0){
+			if(errno == EINTR){
+				printf("recv interrupted, retrying...\n");
+				continue;
+			}
+			printf("recv error: %s(error: %d)\n", strerror(errno), errno);
+			break;
+		}
+		if(rec_size == 0){
+			printf("recv timed out or connection closed\n");
+			break;
+		}
+		printf("client received from %s:%u, content: %s\n", inet_ntoa(server_addr.sin_addr), ntohs(server_addr.sin_port), recbuf);
+
 	}
  
-	close(sockfd);
- 
+	printf("client exit\n");
+	close(client_fd);
 }

@@ -231,6 +231,7 @@ int main(void){
      * @param buf: 缓冲区
      * @param count: 写入的字节数
      * @return: 大于等于0表示实际写入的字节数；小于0表示出错
+     * @note 即使socket被设置为非阻塞，此时发送缓冲区满了，write也会返回-1，并设置errno为EAGAIN或EWOULDBLOCK
      * 
      * ssize_t recv(int sockfd, void *buf, size_t len, int flags);
      * @brief 从套接字sockfd中读取数据到buf中，最多读取len个字节
