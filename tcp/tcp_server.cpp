@@ -118,32 +118,6 @@ int main(void){
 		exit(0);
 	}
 
-  /**
-   * <arpa/inet.h>中定义了一些函数和宏，用于将主机字节序转换为网络字节序
-   */
-  uint32_t value = 0x11223344;
-  uint8_t* value1_ptr = reinterpret_cast<uint8_t*>(&value);
-  uint8_t* value2_ptr = reinterpret_cast<uint8_t*>(&value) + 1;
-  uint8_t* value3_ptr = reinterpret_cast<uint8_t*>(&value) + 2;
-  uint8_t* value4_ptr = reinterpret_cast<uint8_t*>(&value) + 3;
-  printf("value: %x.%x.%x.%x\n", *value1_ptr, *value2_ptr, *value3_ptr, *value4_ptr);
-  in_addr_t ip_addr = inet_addr("192.168.2.2");
-  uint8_t ip_addr1 = ip_addr & 0xFF;
-  uint8_t ip_addr2 = (ip_addr >> 8) & 0xFF;
-  uint8_t ip_addr3 = (ip_addr >> 16) & 0xFF;
-  uint8_t ip_addr4 = (ip_addr >> 24) & 0xFF;
-  printf("ip_addr: %u.%u.%u.%u\n", ip_addr1, ip_addr2, ip_addr3, ip_addr4);
-  uint16_t port = htons(0x8000);
-  uint16_t port1 = port & 0xFF;
-  uint16_t port2 = (port >> 8) & 0xFF;
-  printf("port: %x.%x\n", port1, port2);
-  uint32_t addr = htonl(0x80706050);
-  uint32_t addr1 = addr & 0xFF;
-  uint32_t addr2 = (addr >> 8) & 0xFF;
-  uint32_t addr3 = (addr >> 16) & 0xFF;
-  uint32_t addr4 = (addr >> 24) & 0xFF;
-  printf("addr: %x.%x.%x.%x\n", addr1, addr2, addr3, addr4);
-
 	memset(&servaddr, 0, sizeof(servaddr));
 	servaddr.sin_family = AF_INET;
 	servaddr.sin_port = htons(PORT);
