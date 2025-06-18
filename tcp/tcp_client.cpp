@@ -55,10 +55,10 @@ int main(void){
     sendbuf[3] = 'l';
     sendbuf[4] = 'o';
     sendbuf[7] = '\0';
-		write(sockfd, sendbuf, sizeof(sendbuf));
+		write(sockfd, sendbuf, strlen(sendbuf)+1);
     printf("sending: %s\n", sendbuf);
  
-		ssize_t len = read(sockfd, recbuf, sizeof(recbuf));
+		int len = read(sockfd, recbuf, sizeof(recbuf));
 		if(len < 0){
 			if(errno == EINTR){
 				continue;
@@ -71,7 +71,7 @@ int main(void){
       break;
     }
  
-		printf("receive: %s\n", recbuf);
+		printf("receive %d bytes: %s\n", len, recbuf);
     sleep(1);
 	}
  
