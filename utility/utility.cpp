@@ -5,6 +5,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include <sys/types.h>
+#include <stddef.h>
 
 /**
  * @brief arpa/inet.h主要是提供了网络地址转换，以及字节序转换的函数。 
@@ -158,10 +159,85 @@ void byte_order_example() {
      */
 }
 
+struct A {
+    int a;
+    char b;
+    short c;
+};
+
+void offest_example() {
+    /**
+     * offsetof(type, member)宏用于获取结构体成员的偏移量
+     * @param type: 结构体类型
+     * @param member: 结构体成员名
+     * @return: 返回成员相对于结构体起始地址的偏移量
+     */
+    int size_of_a = sizeof(A);
+    printf("Size of struct A: %d\n", size_of_a);
+    size_t offset_a = offsetof(A, a);
+    size_t offset_b = offsetof(A, b);
+    size_t offset_c = offsetof(A, c);
+    printf("Offset of member 'a': %zu\n", offset_a);
+    printf("Offset of member 'b': %zu\n", offset_b);
+    printf("Offset of member 'c': %zu\n", offset_c);
+}
+
+void unlink_example() {
+    /**
+     * int unlink(const char *pathname);
+     * @brief 删除一个文件或符号链接
+     * @param pathname: 要删除的文件或符号链接的路径
+     * @return: 成功返回0，失败返回-1并设置errno
+     * EROFS: 文件存在于只读文件系统中
+     * EFAULT: 文件系统不支持删除操作
+     * ENOENT: 文件不存在
+     * ENOTDIR: 路径中的某个组件不是目录
+     * ENAMETOOLONG: 路径名过长
+     * 
+     * @note 使用unlink函数删除文件的时候，只会删除目录项 ，并且将inode节点的硬链接数目减一而已，并不一定会释放inode节点。
+     *       
+     */
+    const char* file_path = "/mnt/workspace/cgz_workspace/Exercise/socket_example/build/test.txt";
+    int ret = unlink(file_path);
+    if(ret == 0) {
+        printf("File %s deleted successfully.\n", file_path);
+    } else {
+        printf("Failed to delete file %s: %s\n", file_path, strerror(errno));
+    }
+}
+
+void fgets_example() {
+    /**
+     * char* fgets(char *str, int n, FILE *stream);
+     * @brief 从指定的文件流中读取一行字符
+     * @param str: 指向存储读取内容的缓冲区
+     * @param n: 缓冲区大小
+     * @param stream: 指向文件流的指针
+     * @return: 成功返回str指针，失败返回NULL
+     * 
+     * @note fgets会读取直到遇到换行符、文件结束符或读取n-1个字符为止，并在末尾添加null字符'\0'。
+     */
+    char buf[5];
+    if(fgets(buf, sizeof(buf), stdin) != NULL) {
+        printf("Read from stdin with len %ld: %s\n", strlen(buf), buf);
+        if(buf[strlen(buf) - 1] == '\n') {
+            printf("the %ld character is '\\n'\n", strlen(buf));
+        }
+    } else {
+        printf("Failed to read from stdin: %s\n", strerror(errno));
+    }
+}
+
 int main(void) {
     printf("======================= IP Address Example =======================\n");
     ipaddr_example();
     printf("======================= Byte Order Example =======================\n");
     byte_order_example();
+    printf("======================= Offset Example =======================\n");
+    offest_example();
+    printf("======================= Unlink Example =======================\n");
+    unlink_example();
+    printf("======================= fgets Example =======================\n");
+    fgets_example();
     return 0;
 }
