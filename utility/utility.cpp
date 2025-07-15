@@ -6,6 +6,8 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <stddef.h>
+#include <sys/stat.h>
+#include <fcntl.h>  
 
 /**
  * @brief arpa/inet.h主要是提供了网络地址转换，以及字节序转换的函数。 
@@ -228,6 +230,71 @@ void fgets_example() {
     }
 }
 
+void fstat_example() {
+  const char* filename = "/mnt/workspace/cgz_workspace/Exercise/socket_example/utility/CMakeLists.txt";
+
+  int fd = open(filename, O_RDONLY);
+  if(fd == -1) {
+    perror("open failed");
+    return;
+  }
+
+  /**
+   * struct stat {
+   *     dev_t     st_dev;     // 设备ID
+   *     ino_t     st_ino;     // 索引节点号
+   *     mode_t    st_mode;    // 文件类型和权限
+   *     nlink_t   st_nlink;   // 硬链接数
+   *     uid_t     st_uid;     // 所有者用户ID
+   *     gid_t     st_gid;     // 所有者组ID
+   *     dev_t     st_rdev;    // 设备类型（如果是特殊文件）
+   *     off_t     st_size;    // 文件大小（字节数）
+   *     blksize_t st_blksize; // 文件系统块大小
+   *     blkcnt_t  st_blocks;  // 分配的块数
+   *     time_t    st_atime;   // 最后访问时间
+   *     time_t    st_mtime;   // 最后修改时间
+   *     time_t    st_ctime;   // 最后状态改变时间
+   * };
+   * @brief 获取文件状态信息
+   */
+  struct stat sb;
+
+  /**
+   * int fstat(int fd, struct stat *buf);
+   * @brief 获取文件描述符fd对应的文件状态信息
+   * @param fd: 文件描述符
+   * @param buf: 指向stat结构体的指针，用于存储文件
+   * 
+   * @note fstat函数不会改变文件的访问时间
+   * @return 成功返回0，失败返回-1并设置errno
+   * 
+   * @note stat函数是获取文件路径对应的文件状态信息，而fstat函数是获取文件描述符对应的文件状态信息。
+   */
+  int ret = fstat(fd, &sb);
+  if(ret == -1) {
+    perror("fstat failed");
+    close(fd); // 关闭文件描述符
+    return; 
+  }
+
+  printf("stat st_dev: %ld\n", sb.st_dev);
+  printf("stat st_ino: %ld\n", sb.st_ino);
+
+  printf("stat st_mode: %o\n", sb.st_mode);
+  printf("stat st_nlink: %ld\n", sb.st_nlink);
+  printf("stat st_uid: %d\n", sb.st_uid);
+  printf("stat st_gid: %d\n", sb.st_gid);
+  printf("stat st_rdev: %ld\n", sb.st_rdev);
+  printf("stat st_size: %ld bytes\n", sb.st_size);
+  printf("stat st_blksize: %ld bytes\n", sb.st_blksize);
+  printf("stat st_blocks: %ld\n", sb.st_blocks);
+  printf("stat st_atime: %ld\n", sb.st_atime);
+  printf("stat st_mtime: %ld\n", sb.st_mtime);
+  printf("stat st_ctime: %ld\n", sb.st_ctime);
+
+  close(fd); // 关闭文件描述符
+}
+
 int main(void) {
     printf("======================= IP Address Example =======================\n");
     ipaddr_example();
@@ -239,5 +306,7 @@ int main(void) {
     unlink_example();
     printf("======================= fgets Example =======================\n");
     fgets_example();
+    printf("======================= fstat Example =======================\n");
+    fstat_example();
     return 0;
 }
