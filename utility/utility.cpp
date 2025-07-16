@@ -280,7 +280,18 @@ void fstat_example() {
   printf("stat st_dev: %ld\n", sb.st_dev);
   printf("stat st_ino: %ld\n", sb.st_ino);
 
+  /**
+   * int st_mode: 文件类型和权限
+   * @note st_mode的高位表示文件类型，低位表示文件权限
+   * @note 文件类型包括：S_IFREG(普通文件)、S_IFDIR(目录)、S_IFCHR(字符设备)、S_IFBLK(块设备)、S_IFIFO(管道)、S_IFLNK(符号链接)、S_IFSOCK(套接字)等
+   * @note 文件权限包括：S_IRUSR(用户可读)、 S_IWUSR(用户可写)、S_IXUSR(用户可执行)、S_IRGRP(组可读)、S_IWGRP(组可写)、S_IXGRP(组可执行)、S_IROTH(其他用户可读)、S_IWOTH(其他用户可写)、S_IXOTH(其他用户可执行)
+   * @note st_mode的值可以通过按位与操作来检查文件类型和权限
+   */
   printf("stat st_mode: %o\n", sb.st_mode);
+  if(S_IFREG & sb.st_mode) {
+    printf("File type: Regular file\n");
+  }
+
   printf("stat st_nlink: %ld\n", sb.st_nlink);
   printf("stat st_uid: %d\n", sb.st_uid);
   printf("stat st_gid: %d\n", sb.st_gid);
@@ -295,6 +306,26 @@ void fstat_example() {
   close(fd); // 关闭文件描述符
 }
 
+void ftruncate_example() {
+  /**
+   * int truncate(const char *path, off_t length);
+   * @brief 截断文件到指定长度
+   * @param path: 要截断的文件路径
+   * @param length: 截断后的文件长度
+   * @return 成功返回0，失败返回-1并设置errno
+   * 
+   * @note 如果length小于当前文件大小，则会丢弃超出部分的数据
+   * @note 如果length大于当前文件大小，则会在文件末尾填充空字节
+   */
+  const char* file_path = "/mnt/workspace/cgz_workspace/Exercise/socket_example/utility/output/test.txt";
+  int ret = truncate(file_path, 5);
+  if(ret == -1) {
+    perror("truncate failed");
+  } else {
+    printf("File %s truncated to 5 bytes successfully.\n", file_path);
+  }
+} 
+
 int main(void) {
     printf("======================= IP Address Example =======================\n");
     ipaddr_example();
@@ -308,5 +339,7 @@ int main(void) {
     fgets_example();
     printf("======================= fstat Example =======================\n");
     fstat_example();
+    printf("======================= ftruncate Example =======================\n");
+    ftruncate_example();
     return 0;
 }

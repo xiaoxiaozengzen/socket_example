@@ -44,13 +44,14 @@
  * @note 映射区域的大小必须是系统页面大小的整数倍，可以通过 `sysconf(_SC_PAGE_SIZE)` 获取页面大小
  * @note 映射区域的生命周期与文件描述符 fd 相关联，
  *       当文件描述符关闭时，映射区域会被自动解除映射
+ * @note 映射区域的大小必须小于或等于文件的大小，否则映射会失败
  */
 
 void regular_file_example() {
   const char* filename = "/mnt/workspace/cgz_workspace/Exercise/socket_example/mmap/output/shared";
 
   // 打开文件
-  int fd = open(filename, O_RDWR | O_CREAT);
+  int fd = open(filename, O_RDWR);
   if (fd == -1) {
     perror("open failed");
     return;
@@ -70,10 +71,18 @@ void regular_file_example() {
 
   size_t file_size = sb.st_size;
   std::cout << "file size: " << file_size << " bytes" << std::endl;
+  if(file_size < page_size) {
+    // 确保文件存在并且有足够的空间
+    if (ftruncate(fd, page_size) == -1) {
+      perror("ftruncate failed");
+      close(fd);
+      return;
+    }
+  }
 
   char* addr = (char*)mmap(
       nullptr, // 让内核选择映射地址
-      file_size > 0 ? file_size : page_size, // 映射的长度，至少为页面大小
+      page_size, // 映射的长度，至少为页面大小
       PROT_READ | PROT_WRITE, // 可读可写
       MAP_SHARED, // 映射区域的修改会反映到原文件中
       fd, // 文件描述符
@@ -90,6 +99,8 @@ void regular_file_example() {
   // 可以在映射区域写入数据
   char message[13] = "Hello, mmap!";
   memcpy(addr, message, strlen(message)); // 将数据写入映射区域
+  const char* message_2 = "world";
+  memcpy(addr + 12, message_2, strlen(message_2)); // 将数据写入映射区域
 
   // 读取映射区域的数据
   char buffer[256];
@@ -109,13 +120,19 @@ void regular_file_example() {
    * @note 解除映射后，文件描述符 fd 仍然有效，
    *       但映射区域的内容不再可用
    */
-  munmap(addr, file_size > 0 ? file_size : page_size);
+  munmap(addr, page_size);
   close(fd); // 关闭文件描述符
+}
+
+void special_file_example() {
+  // 使用特殊文件提供匿名内存映射：适用于具有亲缘关系的进程之间.
 }
 
 int main() {
   std::cout << "============= regular file_example =============" << std::endl;
   regular_file_example();
+  std::cout << "============= special file_example =============" << std::endl;
+  special_file_example();
 
   return 0;
 }
