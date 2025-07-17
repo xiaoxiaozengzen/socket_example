@@ -7,7 +7,12 @@
 #include <sys/types.h>
 #include <stddef.h>
 #include <sys/stat.h>
-#include <fcntl.h>  
+#include <fcntl.h>
+#include <netinet/in.h>
+#include <stdint.h>
+#include <sys/stat.h>
+#include <dirent.h>
+#include <sys/file.h>
 
 /**
  * @brief arpa/inet.h主要是提供了网络地址转换，以及字节序转换的函数。 
@@ -316,6 +321,8 @@ void ftruncate_example() {
    * 
    * @note 如果length小于当前文件大小，则会丢弃超出部分的数据
    * @note 如果length大于当前文件大小，则会在文件末尾填充空字节
+   * 
+   * @note ftruncate函数参数是文件描述符，而truncate函数参数是文件路径
    */
   const char* file_path = "/mnt/workspace/cgz_workspace/Exercise/socket_example/utility/output/test.txt";
   int ret = truncate(file_path, 5);
@@ -324,7 +331,154 @@ void ftruncate_example() {
   } else {
     printf("File %s truncated to 5 bytes successfully.\n", file_path);
   }
-} 
+}
+
+void fopen_example() {
+    /**
+     * FILE* fopen(const char *filename, const char *mode);
+     * @brief 打开一个文件
+     * @param filename: 要打开的文件名
+     * @param mode: 打开模式，如"r"（只读）、"w"（写入）、"a"（追加）等
+     * @return 成功返回指向FILE对象的指针，失败返回NULL并设置errno
+     * 
+     * @note 打开模式包括：
+     * "r": 只读模式，文件必须存在，不会清空文件内容
+     * "w": 写入模式，如果文件存在则清空内容，如果不存在则创建新文件
+     * "a": 追加模式，如果文件存在则在末尾追加内容，如果不存在则创建新文件
+     * "r+": 读写模式，文件必须存在，不会清空文件内容
+     * "w+": 读写模式，如果文件存在则清空内容，如果不存在则创建新文件
+     * "a+": 读写追加模式，如果文件存在则在末尾追加内容，如果不存在则创建新文件
+     * "b": 二进制模式，可以与其他模式组合使用，如"rb"（只读二进制）、 "wb"（写入二进制）、"ab"（追加二进制）等
+     * "t": 文本模式，可以与其他模式组合使用，如"rt"（只读文本）、"wt"（写入文本）、"at"（追加文本）等
+     */
+    FILE* fp = fopen("/mnt/workspace/cgz_workspace/Exercise/socket_example/utility/output/test.txt", "r+");
+    if(fp == NULL) {
+        perror("fopen failed");
+        return;
+    }
+
+    /**
+     * typedef struct _IO_FILE FILE;
+     * struct _IO_FILE {
+     *     int _flags; // 文件状态标志
+     *     char *_IO_read_ptr; // 读取指针
+     *     char *_IO_read_end; // 读取结束指针
+     *     char *_IO_read_base; // 读取缓冲区起始地址
+     *     char *_IO_write_base; // 写入缓冲区起始地址
+     *     char *_IO_write_ptr; // 写入指针
+     *     char *_IO_write_end; // 写入结束指针
+     *     char *_IO_buf_base; // 缓冲区起始地址
+     *     char *_IO_buf_end; // 缓冲区结束地址
+     *     char *_IO_save_base; // 保存的缓冲区起始地址
+     *     char *_IO_backup_base; // 备份的缓冲区起始地址
+     *     char *_IO_save_end; // 保存的缓冲区结束地址
+     *     struct _IO_marker *_markers; // 标记列表
+     *     struct _IO_FILE *_chain; // 链接到下一个文件对象
+     *     int _fileno; // 文件描述符
+     *     int _flags2; // 额外的文件状态标志
+     *     __off_t _old_offset; // 旧的偏移量
+     *     unsigned short _cur_column; // 当前列号
+     *     signed char _vtable_offset; // 虚函数表偏移量
+     *     char _shortbuf[1]; // 短缓冲区
+     *     _IO_lock_t *_lock; // 文件锁
+     *     __off64_t _offset; // 文件偏移量
+     *     struct _IO_codecvt *_codecvt; // 编码转换结构体
+     *     struct _IO_wide_data *_wide_data; // 宽字符数据结构
+     *     struct _IO_FILE *_freeres_list; // 释放资源列表
+     *     void *_freeres_buf; // 释放资源缓冲区
+     *     size_t __pad5; // 填充字节
+     *     int _mode; // 文件模式
+     *     char _unused2[15 * sizeof(int) - 4 * sizeof(void *) - sizeof(size_t)]; // 未使用的填充字节
+     * };
+     * @note FILE结构体用于表示打开的文件，包含了文件状态、缓冲区、文件描述符等信息。
+     */
+
+    printf("FILE pointer: %p\n", fp);
+    printf("FILE _flags: %x\n", fp->_flags);
+    
+    // 读取文件内容
+    char buf[100];
+    /**
+     * int fread(void *ptr, size_t size, size_t count, FILE *stream);
+     * @brief 从文件流中读取数据
+     * @param ptr: 指向存储读取数据的缓冲区
+     * @param size: 每个元素的大小（字节数）
+     * @param count: 要读取的元素数量
+     * @param stream: 指向FILE对象的指针
+     * @return: 成功返回实际读取的元素数量，失败返回0并设置errno
+     */
+    int bytes_read = fread(buf, 1, sizeof(buf) - 1, fp);
+    if(bytes_read < 0) {
+        perror("fread failed");
+    } else {
+        buf[bytes_read] = '\0'; // 确保字符串以null结尾
+        printf("Read %d bytes: %s\n", bytes_read, buf);
+    }
+
+    // 写入文件内容
+    const char* write_data = "Hello, World!";
+    /**
+     * int fwrite(const void *ptr, size_t size, size_t count, FILE *stream);
+     * @brief 向文件流中写入数据
+     * @param ptr: 指向要写入的数据的缓冲区
+     * @param size: 每个元素的大小（字节数）
+     * @param count: 要写入的元素数量
+     * @param stream: 指向FILE对象的指针
+     * @return: 成功返回实际写入的元素数量，失败返回0并设置errno
+     */
+    int bytes_written = fwrite(write_data, 1, strlen(write_data), fp);
+    if(bytes_written < 0) {
+        perror("fwrite failed");
+    } else {
+        printf("Wrote %d bytes: %s\n", bytes_written, write_data);
+    }
+
+    fclose(fp);
+}
+
+void opendir_example() {
+    /**
+     * DIR* opendir(const char *name);
+     * @brief 打开一个目录
+     * @param name: 要打开的目录路径
+     * @return 成功返回指向DIR对象的指针，失败返回NULL并设置errno
+     * 
+     * @note DIR结构体用于表示打开的目录，包含了目录状态、缓冲区等信息。
+     */
+    const char* dir_path = "/mnt/workspace/cgz_workspace/Exercise/socket_example/utility/output";
+    DIR* dir = opendir(dir_path);
+    if(dir == NULL) {
+        perror("opendir failed");
+        return;
+    }
+
+    /**
+     * struct dirent {
+     *     ino_t          d_ino;       // inode号
+     *     off_t          d_off;       // 目录项在该目录流中的偏移
+     *     unsigned short d_reclen;    // 目录项长度
+     *     unsigned char  d_type;      // 类型（文件/目录等）
+     *     char           d_name[256]; // 文件名
+     * };
+     * @brief dirent结构体用于表示目录项，包含了inode号、目录项偏移、目录项长度、类型和文件名等信息。
+     */
+    struct dirent* entry;
+    printf("dirent d_type: %d is reg\n", DT_REG);
+    printf("dirent d_type: %d is dir\n", DT_DIR);
+    printf("dirent d_type: %d is link\n", DT_LNK);
+    printf("dirent d_type: %d is sock\n", DT_SOCK);
+    printf("dirent d_type: %d is fifo\n", DT_FIFO);
+    printf("dirent d_type: %d is char\n", DT_CHR);
+    printf("dirent d_type: %d is blk\n", DT_BLK);
+    printf("dirent d_type: %d is unknown\n", DT_UNKNOWN);
+    while((entry = readdir(dir)) != NULL) {
+        printf("d_ino: %lu, d_off: %ld, d_reclen: %hu, d_type: %u, d_name: %s\n",
+               (unsigned long)entry->d_ino, entry->d_off, entry->d_reclen,
+               entry->d_type, entry->d_name);
+    }
+
+    closedir(dir);
+}
 
 int main(void) {
     printf("======================= IP Address Example =======================\n");
@@ -341,5 +495,9 @@ int main(void) {
     fstat_example();
     printf("======================= ftruncate Example =======================\n");
     ftruncate_example();
+    printf("======================= fopen Example =======================\n");
+    fopen_example();
+    printf("======================= opendir Example =======================\n");
+    opendir_example();
     return 0;
 }
