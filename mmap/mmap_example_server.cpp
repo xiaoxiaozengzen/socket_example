@@ -23,8 +23,12 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/shm.h>
+#include <semaphore.h>
 
 #include <iostream>
+#include <thread>
+#include <chrono>
 
 /**
  * void *mmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset);
@@ -124,8 +128,68 @@ void regular_file_example() {
   close(fd); // 关闭文件描述符
 }
 
+/**
+ * @brief 使用特别的文件，例如共享内存文件
+ * 
+ */
 void special_file_example() {
-  // 使用特殊文件提供匿名内存映射：适用于具有亲缘关系的进程之间.
+  struct SharedData {
+    sem_t sem;
+    char buf[1024];
+  };
+
+  /**
+   * int shm_open(const char *name, int oflag, mode_t mode);
+   * @brief 打开或创建一个共享内存对象
+   * @param name 共享内存对象的名称
+   * @param oflag 打开标志，通常为 O_CREAT | O_RDWR
+   * @param mode 共享内存对象的权限，通常为 0666
+   * @return 成功返回文件描述符，失败返回 -1 并设置 errno
+   * @note shm_open打开的文件都在tempfs文件系统中，例如/dev/shm/，因此name不能带"/"路径
+   * 
+   */
+  int shm_fd = shm_open("my_shm", O_CREAT | O_RDWR, 0666);
+  if (shm_fd == -1) {
+    perror("shm_open failed");
+    return;
+  }
+  ftruncate(shm_fd, sizeof(SharedData)); // 设置共享内存对象的大小
+  SharedData* data = (SharedData*)mmap(
+      nullptr,
+      sizeof(SharedData),
+      PROT_READ | PROT_WRITE,
+      MAP_SHARED,
+      shm_fd,
+      0
+  );
+  if (data == MAP_FAILED) {
+    perror("mmap failed");
+    close(shm_fd);
+
+    return;
+  }
+
+  sem_init(&data->sem, 1, 0); // 初始化信号量，初始值为0
+  strcpy(data->buf, "Hello from server via shared memory!");
+  std::cout << "Server wrote to shared memory: " << data->buf << std::endl;
+  sem_post(&data->sem); // 释放信号量，通知客户端数据已写入
+
+  while(true) {
+    if(strcmp(data->buf, "Hello from server via shared memory!") != 0) {
+      break;
+    }
+  }
+
+  sem_wait(&data->sem); // 等待客户端处理完数据
+  std::cout << "Server read from shared memory: " << data->buf << std::endl;
+
+  int ret = shm_unlink("my_shm"); // 删除共享内存对象
+  if (ret == -1) {
+    perror("shm_unlink failed");
+    close(shm_fd);
+    return;
+  }
+  
 }
 
 int main() {
