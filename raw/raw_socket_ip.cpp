@@ -98,13 +98,6 @@ int main() {
         std::cout << "ICMP type: " << (int)icmph->type
                   << ", code: " << (int)icmph->code << std::endl;
 
-        // 打印源IP和目标IP
-        struct in_addr src, dst;
-        src.s_addr = iph->saddr;
-        dst.s_addr = iph->daddr;
-        std::cout << "Src IP: " << inet_ntoa(src)
-                  << ", Dst IP: " << inet_ntoa(dst) << std::endl;
-
         // 只处理Echo请求和应答
         if (icmph->type == ICMP_ECHO)
             std::cout << "ICMP Echo Request" << std::endl;
