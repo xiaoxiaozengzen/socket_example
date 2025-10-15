@@ -75,6 +75,22 @@ int main(void) {
     }
     printf("Accepted connection from %s\n", cli_un.sun_path);
 
+    /**
+     * 获取对端进程的凭据，只能用于UNIX域套接字
+     * struct ucred {
+     *  pid_t pid; // 进程ID
+     *  uid_t uid; // 用户ID
+     *  gid_t gid; // 组ID
+     * };
+     */
+    struct ucred cred;
+    socklen_t cred_len = sizeof(cred);
+    if (getsockopt(conn_fd, SOL_SOCKET, SO_PEERCRED, &cred, &cred_len) == 0) {
+      printf("Peer PID: %d, UID: %d, GID: %d\n", cred.pid, cred.uid, cred.gid);
+    } else {
+      perror("getsockopt SO_PEERCRED");
+    }
+
     while (1) {
       int n = read(conn_fd, buf, sizeof(buf));
       if (n < 0) {
